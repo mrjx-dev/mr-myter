@@ -1,8 +1,8 @@
-# YouTube Uploader
+# Auto-MYTer (Automated Mass Youtube Uploader)
 
 ## Project Summary
 
-YouTube Uploader is an automated tool for bulk video uploads to YouTube.
+Auto-MYTer is an automated tool for bulk video uploads to YouTube.
 
 Key features include:
 
@@ -59,7 +59,7 @@ Using Selenium WebDriver, it simulates user actions in YouTube Studio, streamlin
     ├── README.md          <- Project README
     │ 
     ├── src                  <- source code folder
-    │   └── yt-cc-main.py      <- main script
+    │   └── auto-myter.py      <- main script
     │ 
     └── videos               <- videos folder
         ├── video1.mp4         <- your video1 file
@@ -75,7 +75,7 @@ Using Selenium WebDriver, it simulates user actions in YouTube Studio, streamlin
 7. Run the following command to start the script:
 
     ```powershell
-    python .\src\yt-cc-main.py
+    python .\src\auto-myter.py
     ```
 
 ## Process Steps
