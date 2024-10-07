@@ -1,33 +1,28 @@
 """
-Main orchestration module for the YouTube video uploader.
+Main module for Mr-Myter.
 
-This module coordinates all functions, classes, and modules required for the automated
-YouTube video upload process, including browser control, file management, and user interaction.
+Coordinates functions and modules for automated YouTube video upload.
 """
 
 import os
 import time
 import traceback
 
-from utility.driver import setup_driver, start_chrome_debugger
-from utility.uploader import upload_video
+from utility import ChromeDriver, YouTubeUploader
 
 
-def main():
+def main() -> None:
     """
-    Execute the main YouTube video upload process.
+    Execute YouTube video upload process.
 
-    This function:
-    1. Initializes the Chrome driver with debugging capabilities
-    2. Locates video files in the designated folder
-    3. Uploads each video to YouTube sequentially
-    4. Handles user input for process termination or restart
-    5. Manages exceptions and performs cleanup
-
-    The function runs in a loop, allowing for multiple upload sessions until the user chooses to exit.
+    1. Initialize Chrome driver
+    2. Locate video files
+    3. Upload videos to YouTube
+    4. Handle user input for termination or restart
+    5. Manage exceptions and cleanup
 
     Raises:
-        Exception: If there's an error during execution, particularly with driver initialization.
+        Exception: If driver initialization fails.
     """
     try:
         print("WELCOME TO YOUTUBE UPLOADER!")
@@ -38,12 +33,15 @@ def main():
         print(r" \ \_\ \ \_\  \ \_\ \_\ /\_____\   /\_\/\_\    \ \_\  \ \_\ \_\ ")
         print(r"  \/_/  \/_/   \/_/ /_/ \/_____/   \/_/\/_/     \/_/   \/_/ /_/ ")
         print()
-        start_chrome_debugger()
-        driver = setup_driver()
+        chrome_driver = ChromeDriver()
+        chrome_driver.start_chrome_debugger()
+        driver = chrome_driver.setup_driver()
         if not driver:
             raise Exception("Failed to initialize WebDriver")
 
-        while True:  # Main loop to allow restarting
+        uploader = YouTubeUploader(driver)
+
+        while True:
             script_dir = os.path.dirname(__file__)
             videos_folder = os.path.abspath(os.path.join(script_dir, "../videos"))
             print(
@@ -64,7 +62,7 @@ def main():
 
                 for index, video_file in enumerate(video_files, start=1):
                     video_path = os.path.join(videos_folder, video_file)
-                    upload_video(driver, video_path, index, total_videos)
+                    uploader.upload_video(video_path, index, total_videos)
 
             print("NO MORE VIDEOS TO UPLOAD.")
             print()
@@ -89,7 +87,7 @@ def main():
                             time.sleep(1)
                         time.sleep(1)
                         print("Restarting now!")
-                        break  # Break the inner loop to restart the uploader
+                        break  # Break the inner loop to restart
                     elif restart in ["n", "no"]:
                         print("Exiting YouTube Uploader in:")
                         for i in range(3, 0, -1):
@@ -97,7 +95,7 @@ def main():
                             time.sleep(1)
                         print("Goodbye!")
                         time.sleep(1)
-                        return  # Exit the function
+                        return  # Exit
                     else:
                         print("Invalid input. Please enter 'y' or 'n'.")
                 else:
@@ -107,8 +105,8 @@ def main():
         print(f"An error occurred: {str(e)}")
         print(f"Traceback: {traceback.format_exc()}")
     finally:
-        if "driver" in locals() and driver:
-            driver.quit()
+        if chrome_driver:
+            chrome_driver.quit_driver()
 
 
 if __name__ == "__main__":

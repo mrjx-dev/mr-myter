@@ -1,8 +1,24 @@
-# Auto-MYTer (Automated Mass Youtube Uploader)
+# 🤖 Mr-Myter (Mass Youtube Uploader)
 
-## Project Summary
+## 📜 History
 
-Auto-MYTer is an automated tool for bulk video uploads to YouTube.
+As mentioned on my GitHub profile, I am also a YouTube Content Strategist, Manager, and SEO Specialist. I found myself regularly uploading YouTube videos in bulk, scheduling them, and ensuring that everything from the titles to the descriptions and tags are perfect for SEO. To optimize my workflow and save time, I decided to put my Python programming skills to the test and created this tool. This allows me more free time to focus on creating more content and improving my strategies.
+
+<div align="center">
+  
+  [![LinkedIn](https://img.shields.io/badge/-LinkedIn-0077B5?style=flat-square&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/mrjxtr)
+  [![Upwork](https://img.shields.io/badge/-Upwork-6fda44?style=flat-square&logo=upwork&logoColor=white)](https://www.upwork.com/freelancers/~01f2fd0e74a0c5055a?mp_source=share)
+  [![Facebook](https://img.shields.io/badge/-Facebook-1877F2?style=flat-square&logo=facebook&logoColor=white)](https://www.facebook.com/mrjxtr)
+  [![Instagram](https://img.shields.io/badge/-Instagram-E4405F?style=flat-square&logo=instagram&logoColor=white)](https://www.instagram.com/mrjxtr)
+  [![Threads](https://img.shields.io/badge/-Threads-000000?style=flat-square&logo=threads&logoColor=white)](https://www.threads.net/@mrjxtr)
+  [![Twitter](https://img.shields.io/badge/-Twitter-1DA1F2?style=flat-square&logo=twitter&logoColor=white)](https://twitter.com/mrjxtr)
+  [![Gmail](https://img.shields.io/badge/-Gmail-D14836?style=flat-square&logo=gmail&logoColor=white)](mailto:mr.jesterlumacad@gmail.com)
+
+</div>
+
+## 📝 Project Summary
+
+Mr-MYTer is an automated tool for bulk video uploads to YouTube.
 
 Key features include:
 
@@ -13,7 +29,7 @@ Key features include:
 
 Using Selenium WebDriver, it simulates user actions in YouTube Studio, streamlining the upload process for content creators. This tool saves time for those who regularly upload multiple videos to YouTube.
 
-## Prerequisites
+## 🛠️ Requirements
 
 - Python 3.10 or later
 - Chrome Browser installed
@@ -22,9 +38,9 @@ Using Selenium WebDriver, it simulates user actions in YouTube Studio, streamlin
   - selenium
   - python-dotenv
   - webdriver-manager
-- A .env file in the project root your YOUTUBE_STUDIO_URL set
+- A .env file in the project root your `YOUTUBE_STUDIO_URL` set
 
-## Steps to run
+## 🚀 Steps to run
 
 1. Install Python 3.10 or later.
 2. Install the required packages:
@@ -52,16 +68,17 @@ Using Selenium WebDriver, it simulates user actions in YouTube Studio, streamlin
     The folder should look like this:
 
     ```plaintext
-    youtube-uploader     <- project folder
+    youtube-uploader     <- project root directory
     │ 
     ├── .env               <- environment variables
     ├── LICENCE            <- licence
     ├── README.md          <- Project README
     │ 
-    ├── src                  <- source code folder
-    │   └── auto-myter.py      <- main script
+    ├── src                  <- source code directory
+    │   ├── main.py            <- main script
+    │   └── utility            <- modules directory 
     │ 
-    └── videos               <- videos folder
+    └── videos               <- videos directory
         ├── video1.mp4         <- your video1 file
         ├── video1.jpg         <- your thumbnail1 file
         ├── video2.mp4         <- your video2 file
@@ -75,10 +92,10 @@ Using Selenium WebDriver, it simulates user actions in YouTube Studio, streamlin
 7. Run the following command to start the script:
 
     ```powershell
-    python .\src\auto-myter.py
+    python .\src\main.py
     ```
 
-## Process Steps
+## 🔄 Process Steps
 
 1. Starts Chrome with remote debugging enabled.
 2. Initializes the WebDriver and navigates to the YouTube Studio URL.
@@ -96,10 +113,20 @@ Using Selenium WebDriver, it simulates user actions in YouTube Studio, streamlin
 
 Note: The script handles various exceptions and provides status updates throughout the process.
 
-## License
+## 📄 License
 
 This project is licensed under the MIT License. See the LICENSE file for more details.
 
-## Contributing
+## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a PR.
+
+📝 **Let's Connect!**
+
+[![LinkedIn](https://img.shields.io/badge/-LinkedIn-0077B5?style=flat-square&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/mrjxtr)
+[![Upwork](https://img.shields.io/badge/-Upwork-6fda44?style=flat-square&logo=upwork&logoColor=white)](https://www.upwork.com/freelancers/~01f2fd0e74a0c5055a?mp_source=share)
+[![Facebook](https://img.shields.io/badge/-Facebook-1877F2?style=flat-square&logo=facebook&logoColor=white)](https://www.facebook.com/mrjxtr)
+[![Instagram](https://img.shields.io/badge/-Instagram-E4405F?style=flat-square&logo=instagram&logoColor=white)](https://www.instagram.com/mrjxtr)
+[![Threads](https://img.shields.io/badge/-Threads-000000?style=flat-square&logo=threads&logoColor=white)](https://www.threads.net/@mrjxtr)
+[![Twitter](https://img.shields.io/badge/-Twitter-1DA1F2?style=flat-square&logo=twitter&logoColor=white)](https://twitter.com/mrjxtr)
+[![Gmail](https://img.shields.io/badge/-Gmail-D14836?style=flat-square&logo=gmail&logoColor=white)](mailto:youremail@gmail.com)

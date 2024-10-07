@@ -1,12 +1,7 @@
 """
-YouTube Video Uploader Module
+YouTube Video Uploader.
 
-This module contains functions for the YouTube video uploading process, including:
-- Interacting with the YouTube Studio interface
-- Handling file uploads and video details
-- Managing the upload workflow
-
-The functions use Selenium WebDriver to automate interactions with the YouTube Studio web interface.
+Manages YouTube video uploading process and interface interactions.
 """
 
 import os
@@ -24,252 +19,214 @@ from selenium.webdriver.support.ui import WebDriverWait
 from utility.config import STUDIO_URL
 
 
-def safe_find_element(driver, by, value, timeout=10) -> EC.WebElement | None:
-    """
-    Safely locate an element on the page, waiting for its presence.
+class YouTubeUploader:
+    def __init__(self, driver):
+        self.driver = driver
 
-    Args:
-        driver (WebDriver): The Selenium WebDriver instance.
-        by (str): The method used to locate the element (e.g., By.ID, By.CSS_SELECTOR).
-        value (str): The locator value corresponding to the chosen method.
-        timeout (int): Maximum time to wait for the element, default is 10 seconds.
+    def safe_find_element(self, by, value, timeout=10) -> EC.WebElement | None:
+        """
+        Safely locate an element on the page.
 
-    Returns:
-        WebElement or None: The found element if successful, None if the element is not found within the timeout period.
-    """
-    try:
-        return WebDriverWait(driver, timeout).until(
-            EC.presence_of_element_located((by, value))
-        )
-    except TimeoutException:
-        print(f"Element not found: {by}={value}")
+        Args:
+            by: Locator method.
+            value: Locator value.
+            timeout: Maximum wait time in seconds.
+
+        Returns:
+            WebElement or None: Found element or None if not found.
+        """
+        try:
+            return WebDriverWait(self.driver, timeout).until(
+                EC.presence_of_element_located((by, value))
+            )
+        except TimeoutException:
+            print(f"Element not found: {by}={value}")
+            return None
+
+    def safe_click(self, element) -> None:
+        """
+        Safely click an element, using JavaScript if needed.
+
+        Args:
+            element: Element to click.
+
+        Raises:
+            Exceptions not caught by ElementClickInterceptedException.
+        """
+        try:
+            element.click()
+        except ElementClickInterceptedException:
+            self.driver.execute_script("arguments[0].click();", element)
+
+    @staticmethod
+    def find_thumbnail(video_path: str) -> str | None:
+        """
+        Find matching thumbnail for a video file.
+
+        Args:
+            video_path: Path to video file.
+
+        Returns:
+            str or None: Path to thumbnail if found, None otherwise.
+        """
+        video_dir = os.path.dirname(video_path)
+        video_name = os.path.splitext(os.path.basename(video_path))[0]
+
+        for ext in [".jpg", ".jpeg", ".png", ".gif"]:
+            thumbnail_path = os.path.join(video_dir, video_name + ext)
+            if os.path.exists(thumbnail_path):
+                return thumbnail_path
         return None
 
+    def navigate_to_upload_page(self) -> None:
+        """
+        Navigate to YouTube Studio upload page.
 
-def safe_click(driver, element) -> None:
-    """
-    *Attempt to safely click an element, using JavaScript if the regular click is intercepted.
+        Raises:
+            TimeoutException: If page elements are not clickable.
+        """
+        self.driver.get(STUDIO_URL)
+        create_button = WebDriverWait(self.driver, 20).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "#create-icon"))
+        )
+        self.safe_click(create_button)
 
-    This function first tries a regular Selenium click. If that fails due to an interception,
-    it falls back to a JavaScript click, which can bypass certain overlay issues.
-
-    Args:
-        driver (WebDriver): The Selenium WebDriver instance.
-        element (WebElement): The element to be clicked.
-
-    Raises:
-        Any exceptions not caught by the ElementClickInterceptedException handler.
-    """
-    try:
-        element.click()
-    except ElementClickInterceptedException:
-        driver.execute_script("arguments[0].click();", element)
-
-
-def find_thumbnail(video_path: str) -> str | None:
-    """
-    Finds a matching thumbnail file for a given video file.
-
-    Args:
-        video_path (str): The path to the video file.
-
-    Returns:
-        str or None: The path to the thumbnail file if found, None otherwise.
-    """
-    video_dir = os.path.dirname(video_path)
-    video_name = os.path.splitext(os.path.basename(video_path))[0]
-
-    for ext in [".jpg", ".jpeg", ".png", ".gif"]:
-        thumbnail_path = os.path.join(video_dir, video_name + ext)
-        if os.path.exists(thumbnail_path):
-            return thumbnail_path
-    return None
-
-
-def navigate_to_upload_page(driver) -> None:
-    """
-    Navigate to the YouTube Studio upload page.
-
-    This function clicks the create button and selects the 'Upload videos' option.
-
-    Args:
-        driver (WebDriver): The Selenium WebDriver instance.
-
-    Raises:
-        TimeoutException: If the create button or upload option is not clickable within 20 seconds.
-    """
-    driver.get(STUDIO_URL)
-    create_button = WebDriverWait(driver, 20).until(
-        EC.element_to_be_clickable((By.CSS_SELECTOR, "#create-icon"))
-    )
-    safe_click(driver, create_button)
-
-    upload_option = WebDriverWait(driver, 20).until(
-        EC.element_to_be_clickable(
-            (
-                By.XPATH,
-                "//tp-yt-paper-item[@role='menuitem']//yt-formatted-string[contains(text(), 'Upload videos')]",
+        upload_option = WebDriverWait(self.driver, 20).until(
+            EC.element_to_be_clickable(
+                (
+                    By.XPATH,
+                    "//tp-yt-paper-item[@role='menuitem']//yt-formatted-string[contains(text(), 'Upload videos')]",
+                )
             )
         )
-    )
-    safe_click(driver, upload_option)
-    print("Navigated to upload page")
+        self.safe_click(upload_option)
+        print("Navigated to upload page")
 
+    def select_video_file(self, video_path) -> None:
+        """
+        Select video file for upload.
 
-def select_video_file(driver, video_path) -> None:
-    """
-    Select the video file for upload.
+        Args:
+            video_path: Full path to video file.
 
-    This function locates the file input element and sends the video file path to it.
+        Raises:
+            TimeoutException: If file input is not present.
+        """
+        file_input = WebDriverWait(self.driver, 20).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, 'input[type="file"]'))
+        )
+        file_input.send_keys(video_path)
+        print("Video file selected")
 
-    Args:
-        driver (WebDriver): The Selenium WebDriver instance.
-        video_path (str): The full path to the video file.
+    def wait_for_input_fields(self) -> None:
+        """
+        Wait for input fields on upload dialog.
 
-    Raises:
-        TimeoutException: If the file input element is not present within 20 seconds.
-    """
-    file_input = WebDriverWait(driver, 20).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, 'input[type="file"]'))
-    )
-    file_input.send_keys(video_path)
-    print("Video file selected")
+        Raises:
+            Exception: If input fields don't appear within timeout.
+        """
+        next_button = self.safe_find_element(
+            By.CSS_SELECTOR, "#next-button", timeout=300
+        )
+        if not next_button:
+            raise Exception("Input fields not found")
 
+    def set_video_title(self, video_title) -> None:
+        """
+        Set title of uploaded video.
 
-def wait_for_input_fields(driver) -> None:
-    """
-    Wait for the input fields on the upload dialog to appear.
-
-    This function waits for the input fields on the upload dialog to appear before interacting with them.
-
-    Args:
-        driver (WebDriver): The Selenium WebDriver instance.
-
-    Raises:
-        Exception: If the input fields on the upload dialog don't appear within 300 seconds (5 minutes).
-    """
-    next_button = safe_find_element(
-        driver, By.CSS_SELECTOR, "#next-button", timeout=300
-    )
-    if not next_button:
-        raise Exception("Input fields not found")
-
-
-def set_video_title(driver, video_title) -> None:
-    """
-    Set the title of the uploaded video.
-
-    This function locates the title input field, clears it, and enters the new title.
-
-    Args:
-        driver (WebDriver): The Selenium WebDriver instance.
-        video_title (str): The title to set for the video.
-    """
-    title_input = safe_find_element(
-        driver,
-        By.CSS_SELECTOR,
-        "ytcp-social-suggestions-textbox[id='title-textarea'] div[id='textbox']",
-    )
-    if title_input:
-        title_input.clear()
-        title_input.send_keys(video_title)
-        print(f"Video renamed: {video_title}")
-    else:
-        print("Failed to rename video title")
-
-
-def scroll_upload_dialog(driver) -> None:
-    """
-    Scroll the upload dialog to reveal more options.
-
-    This function uses JavaScript to scroll the upload dialog down by 500 pixels.
-
-    Args:
-        driver (WebDriver): The Selenium WebDriver instance.
-    """
-    upload_dialog = safe_find_element(driver, By.CSS_SELECTOR, "ytcp-uploads-dialog")
-    if upload_dialog:
-        driver.execute_script("arguments[0].scrollTop += 500;", upload_dialog)
-    else:
-        print("Upload dialog not found for scrolling")
-
-
-def upload_thumbnail(driver, thumbnail_path) -> None:
-    """
-    Upload a thumbnail for the video if available.
-
-    This function locates the thumbnail input element and uploads the thumbnail if found.
-
-    Args:
-        driver (WebDriver): The Selenium WebDriver instance.
-        thumbnail_path (str): The path to the thumbnail file, or None if not found.
-    """
-    if thumbnail_path:
-        thumbnail_input = safe_find_element(
-            driver,
+        Args:
+            video_title: Title for the video.
+        """
+        title_input = self.safe_find_element(
             By.CSS_SELECTOR,
-            'input[type="file"][accept="image/jpeg,image/png"]',
+            "ytcp-social-suggestions-textbox[id='title-textarea'] div[id='textbox']",
         )
-        if thumbnail_input:
-            thumbnail_input.send_keys(thumbnail_path)
-            print("Thumbnail uploaded...")
-            time.sleep(1)
-            print("Processing video...")
-            time.sleep(5)
+        if title_input:
+            title_input.clear()
+            title_input.send_keys(video_title)
+            print(f"Video renamed: {video_title}")
         else:
-            print("Thumbnail input not found")
-    else:
-        print("No matching thumbnail found")
+            print("Failed to rename video title")
 
+    def scroll_upload_dialog(self) -> None:
+        """
+        Scroll upload dialog to reveal more options.
+        """
+        upload_dialog = self.safe_find_element(By.CSS_SELECTOR, "ytcp-uploads-dialog")
+        if upload_dialog:
+            self.driver.execute_script("arguments[0].scrollTop += 500;", upload_dialog)
+        else:
+            print("Upload dialog not found for scrolling")
 
-def upload_video(driver, video_path, current_video, total_videos):
-    """
-    Main function to handle the video upload process.
+    def upload_thumbnail(self, thumbnail_path) -> None:
+        """
+        Upload video thumbnail if available.
 
-    This function orchestrates the entire upload process by calling other helper functions.
+        Args:
+            thumbnail_path: Path to thumbnail file or None.
+        """
+        if thumbnail_path:
+            thumbnail_input = self.safe_find_element(
+                By.CSS_SELECTOR,
+                'input[type="file"][accept="image/jpeg,image/png"]',
+            )
+            if thumbnail_input:
+                thumbnail_input.send_keys(thumbnail_path)
+                print("Thumbnail uploaded...")
+                time.sleep(1)
+                print("Processing video...")
+                time.sleep(5)
+            else:
+                print("Thumbnail input not found")
+        else:
+            print("No matching thumbnail found")
 
-    Args:
-        driver (WebDriver): The Selenium WebDriver instance.
-        video_path (str): The full path to the video file to be uploaded.
-        current_video (int): The index of the current video in the upload queue.
-        total_videos (int): The total number of videos to be uploaded in this session.
+    def upload_video(self, video_path, current_video, total_videos):
+        """
+        Handle video upload process.
 
-    Raises:
-        TimeoutException: If any step in the upload process times out.
-        Exception: For any other errors during the upload process.
-    """
-    video_path = os.path.abspath(video_path)
-    video_filename = os.path.basename(video_path)
-    video_title = os.path.splitext(video_filename)[0]
+        Args:
+            video_path: Full path to video file.
+            current_video: Index of current video.
+            total_videos: Total number of videos to upload.
 
-    try:
-        print(f"Video {current_video}/{total_videos}: {video_filename}")
+        Raises:
+            TimeoutException: If any upload step times out.
+            Exception: For other upload errors.
+        """
+        video_path = os.path.abspath(video_path)
+        video_filename = os.path.basename(video_path)
+        video_title = os.path.splitext(video_filename)[0]
 
-        navigate_to_upload_page(driver)
-        select_video_file(driver, video_path)
-        wait_for_input_fields(driver)
-        set_video_title(driver, video_title)
-        scroll_upload_dialog(driver)
+        try:
+            print(f"Video {current_video}/{total_videos}: {video_filename}")
 
-        thumbnail_path = find_thumbnail(video_path)
-        upload_thumbnail(driver, thumbnail_path)
+            self.navigate_to_upload_page()
+            self.select_video_file(video_path)
+            self.wait_for_input_fields()
+            self.set_video_title(video_title)
+            self.scroll_upload_dialog()
 
-        print(f"Video {current_video}/{total_videos} uploaded!")
-        print("Preparing next video...")
-        time.sleep(1)
-        print("...")
-        time.sleep(1)
-        print("..")
-        time.sleep(1)
-        print(".")
-        driver.get(STUDIO_URL)
+            thumbnail_path = self.find_thumbnail(video_path)
+            self.upload_thumbnail(thumbnail_path)
 
-    except TimeoutException as te:
-        print(
-            f"Timeout error: {current_video}/{total_videos} - {video_filename}: {str(te)}"
-        )
-    except Exception as e:
-        print(
-            f"Error uploading video {current_video}/{total_videos} - {video_filename}: {str(e)}"
-        )
-        print(f"Traceback: {traceback.format_exc()}")
+            print(f"Video {current_video}/{total_videos} uploaded!")
+            print("Preparing next video...")
+            time.sleep(1)
+            print("...")
+            time.sleep(1)
+            print("..")
+            time.sleep(1)
+            print(".")
+            self.driver.get(STUDIO_URL)
+
+        except TimeoutException as te:
+            print(
+                f"Timeout error: {current_video}/{total_videos} - {video_filename}: {str(te)}"
+            )
+        except Exception as e:
+            print(
+                f"Error uploading video {current_video}/{total_videos} - {video_filename}: {str(e)}"
+            )
+            print(f"Traceback: {traceback.format_exc()}")
