@@ -25,13 +25,24 @@ def main() -> None:
         Exception: If driver initialization fails.
     """
     try:
-        print("WELCOME TO YOUTUBE UPLOADER!")
+        print(
+            r" __    __     ______     __    __     __  __     ______   ______     ______    "
+        )
+        print(
+            r'/\ "-./  \   /\  == \   /\ "-./  \   /\ \_\ \   /\__  _\ /\  ___\   /\  == \   '
+        )
+        print(
+            r"\ \ \-./\ \  \ \  __<   \ \ \-./\ \  \ \____ \  \/_/\ \/ \ \  __\   \ \  __<   "
+        )
+        print(
+            r" \ \_\ \ \_\  \ \_\ \_\  \ \_\ \ \_\  \/\_____\    \ \_\  \ \_____\  \ \_\ \_\ "
+        )
+        print(
+            r"  \/_/  \/_/   \/_/ /_/   \/_/  \/_/   \/_____/     \/_/   \/_____/   \/_/ /_/ "
+        )
+        print()
+        print("Automated Mass YouTube Uploader")
         print("by: @mrjxtr")
-        print(r" __    __     ______       __     __  __     ______   ______    ")
-        print(r'/\ "-./  \   /\  == \     /\ \   /\_\_\_\   /\__  _\ /\  == \   ')
-        print(r"\ \ \-./\ \  \ \  __<    _\_\ \  \/_/\_\/_  \/_/\ \/ \ \  __<   ")
-        print(r" \ \_\ \ \_\  \ \_\ \_\ /\_____\   /\_\/\_\    \ \_\  \ \_\ \_\ ")
-        print(r"  \/_/  \/_/   \/_/ /_/ \/_____/   \/_/\/_/     \/_/   \/_/ /_/ ")
         print()
         chrome_driver = ChromeDriver()
         chrome_driver.start_chrome_debugger()

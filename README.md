@@ -1,4 +1,6 @@
-# 🤖 Mr-Myter (Mass Youtube Uploader)
+# 🤖 Mr-Myter (Automated Mass YouTube Uploader)
+
+![Welcome-Mr-Myter](/docs/welcome-mr-myter.png)
 
 ## 📜 History
 

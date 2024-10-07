@@ -77,4 +77,3 @@ class ChromeDriver:
         if self.driver:
             self.driver.quit()
             self.driver = None
-            print("WebDriver closed successfully")
