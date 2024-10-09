@@ -20,10 +20,10 @@ from utility.config import STUDIO_URL
 
 
 class YouTubeUploader:
-    def __init__(self, driver):
+    def __init__(self, driver) -> None:
         self.driver = driver
 
-    def safe_find_element(self, by, value, timeout=10) -> EC.WebElement | None:
+    def safe_find_element(self, by, value, timeout=10):
         """
         Safely locate an element on the page.
 
