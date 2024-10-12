@@ -182,6 +182,37 @@ class YouTubeUploader:
         else:
             print("No matching thumbnail found")
 
+    def set_video_description(self, video_description):
+        # TODO: Find Element for video description.
+        description_input = self.safe_find_element(
+            By.CSS_SELECTOR,
+            "ytcp-social-suggestions-textbox[id='description-textarea'] div[id='textbox']",
+        )
+        description: str = ""
+        if description_input:
+            description_input.get_property("getElementText")
+            description.append(description_input)
+        else:
+            print("No Video Description")
+
+        # TODO: Create a way to input SEO rich Keywords to replace every "KEYWORD" placeholder in description.
+        seo_keyword = ...
+        for keyword in description:
+            keyword.replace("KEYWORD", seo_keyword)
+
+    # TODO: Finish writing these functions.
+    def set_video_tags(self, tags):
+        # tags_input = self.safe_find_element(
+        #     By.CSS_SELECTOR,
+        # )
+        pass
+
+    def set_monetization():
+        pass
+
+    def set_upload_schedule():
+        pass
+
     def upload_video(self, video_path, current_video, total_videos):
         """
         Handle video upload process.
@@ -198,6 +229,7 @@ class YouTubeUploader:
         video_path = os.path.abspath(video_path)
         video_filename = os.path.basename(video_path)
         video_title = os.path.splitext(video_filename)[0]
+        thumbnail_path = self.find_thumbnail(video_path)
 
         try:
             print(f"Video {current_video}/{total_videos}: {video_filename}")
@@ -207,8 +239,6 @@ class YouTubeUploader:
             self.wait_for_input_fields()
             self.set_video_title(video_title)
             self.scroll_upload_dialog()
-
-            thumbnail_path = self.find_thumbnail(video_path)
             self.upload_thumbnail(thumbnail_path)
 
             print(f"Video {current_video}/{total_videos} uploaded!")
