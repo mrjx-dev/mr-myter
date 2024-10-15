@@ -78,6 +78,26 @@ class YouTubeUploader:
                 return thumbnail_path
         return None
 
+    @staticmethod
+    def find_keywords(video_path: str) -> str | None:
+        """
+        Find matching thumbnail for a video file.
+
+        Args:
+            video_path: Path to video file.
+
+        Returns:
+            str or None: Path to thumbnail if found, None otherwise.
+        """
+        video_dir = os.path.dirname(video_path)
+        video_name = os.path.splitext(os.path.basename(video_path))[0]
+
+        for ext in [".txt"]:
+            keywords_path = os.path.join(video_dir, video_name + ext)
+            if os.path.exists(keywords_path):
+                return keywords_path
+        return None
+
     def navigate_to_upload_page(self) -> None:
         """
         Navigate to YouTube Studio upload page.
@@ -182,23 +202,37 @@ class YouTubeUploader:
         else:
             print("No matching thumbnail found")
 
-    def set_video_description(self, video_description):
+    # TODO: TEST THIS FUNCTION!
+    def set_video_description(self, keywords_path, video_title):
+        # TODO: Create a way to read keywords from file.
+        with open(keywords_path, "r") as f:
+            lines = f.readlines()
+
+        keywords = []
+        title = video_title
+
+        # TODO Create the `keywords` list to pass through the next process.
+        for keyword in lines:
+            keywords = lines.split(",")
+            pass
+
         # TODO: Find Element for video description.
         description_input = self.safe_find_element(
             By.CSS_SELECTOR,
             "ytcp-social-suggestions-textbox[id='description-textarea'] div[id='textbox']",
         )
-        description: str = ""
+
         if description_input:
-            description_input.get_property("getElementText")
-            description.append(description_input)
-        else:
-            print("No Video Description")
+            # description = description_input.get_property("getElementText")
+            description = description_input.get_attribute("innerText")
 
         # TODO: Create a way to input SEO rich Keywords to replace every "KEYWORD" placeholder in description.
-        seo_keyword = ...
         for keyword in description:
-            keyword.replace("KEYWORD", seo_keyword)
+            description = description.replace("KEYWORD", keywords)
+            description = description.replace("TITLE", title)
+
+            description_input.clear()
+            description_input.send_keys(description)
 
     # TODO: Finish writing these functions.
     def set_video_tags(self, tags):
@@ -230,6 +264,7 @@ class YouTubeUploader:
         video_filename = os.path.basename(video_path)
         video_title = os.path.splitext(video_filename)[0]
         thumbnail_path = self.find_thumbnail(video_path)
+        keywords_path = self.find_keywords(video_path)
 
         try:
             print(f"Video {current_video}/{total_videos}: {video_filename}")
