@@ -202,7 +202,7 @@ class YouTubeUploader:
         else:
             print("No matching thumbnail found")
 
-    # TODO: TEST THIS FUNCTION!
+    #! TODO: TEST THIS FUNCTION!
     def set_video_description(self, keywords_path, video_title) -> None:
         """
         Set description of uploaded video.
