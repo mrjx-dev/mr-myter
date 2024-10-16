@@ -92,7 +92,7 @@ class YouTubeUploader:
         video_dir = os.path.dirname(video_path)
         video_name = os.path.splitext(os.path.basename(video_path))[0]
 
-        for ext in [".txt"]:
+        for ext in [".txt", ".md", ".json"]:
             keywords_path = os.path.join(video_dir, video_name + ext)
             if os.path.exists(keywords_path):
                 return keywords_path
@@ -169,9 +169,9 @@ class YouTubeUploader:
         else:
             print("Failed to rename video title")
 
-    def scroll_upload_dialog(self) -> None:
+    def focus_upload_dialog(self) -> None:
         """
-        Scroll upload dialog to reveal more options.
+        Simulates a scroll on the upload dialog to focus and reveal more options.
         """
         upload_dialog = self.safe_find_element(By.CSS_SELECTOR, "ytcp-uploads-dialog")
         if upload_dialog:
@@ -203,42 +203,47 @@ class YouTubeUploader:
             print("No matching thumbnail found")
 
     # TODO: TEST THIS FUNCTION!
-    def set_video_description(self, keywords_path, video_title):
-        # TODO: Create a way to read keywords from file.
+    def set_video_description(self, keywords_path, video_title) -> None:
+        """
+        Set description of uploaded video.
+
+        Args:
+            keywords_path (_type_): Path to the file that contains keywords
+            video_title (_type_): Title for the video
+        """
+        # Read keywords from file
         with open(keywords_path, "r") as f:
-            lines = f.readlines()
+            lines = f.read().strip()
 
-        keywords = []
-        title = video_title
+        # Create the list of keywords
+        seo_keywords = [keyword.strip() for keyword in lines.split(",")]
 
-        # TODO Create the `keywords` list to pass through the next process.
-        for keyword in lines:
-            keywords = lines.split(",")
-            pass
-
-        # TODO: Find Element for video description.
+        # Find video description input Element
         description_input = self.safe_find_element(
             By.CSS_SELECTOR,
             "ytcp-social-suggestions-textbox[id='description-textarea'] div[id='textbox']",
         )
 
         if description_input:
-            # description = description_input.get_property("getElementText")
+            # Get the Current description text from the input field
             description = description_input.get_attribute("innerText")
 
-        # TODO: Create a way to input SEO rich Keywords to replace every "KEYWORD" placeholder in description.
-        for keyword in description:
-            description = description.replace("KEYWORD", keywords)
-            description = description.replace("TITLE", title)
+        # Replace the "KEYWORD" placeholder with the the SEO Keywords
+        for keyword in seo_keywords:
+            description = description.replace("KEYWORD", keyword)
 
+        # Replace the "TITLE" placeholder with the video title
+        description = description.replace("TITLE", video_title)
+
+        if description:
             description_input.clear()
             description_input.send_keys(description)
+            print("Video description is updated with SEO Keywords")
+        else:
+            print("Failed to set video description")
 
     # TODO: Finish writing these functions.
     def set_video_tags(self, tags):
-        # tags_input = self.safe_find_element(
-        #     By.CSS_SELECTOR,
-        # )
         pass
 
     def set_monetization():
@@ -273,7 +278,8 @@ class YouTubeUploader:
             self.select_video_file(video_path)
             self.wait_for_input_fields()
             self.set_video_title(video_title)
-            self.scroll_upload_dialog()
+            self.set_video_description(keywords_path, video_title)
+            self.focus_upload_dialog()
             self.upload_thumbnail(thumbnail_path)
 
             print(f"Video {current_video}/{total_videos} uploaded!")
