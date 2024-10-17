@@ -213,10 +213,12 @@ class YouTubeUploader:
         """
         # Read keywords from file
         with open(keywords_path, "r") as f:
-            lines = f.read().strip()
+            lines = f.readlines()
 
         # Create the list of keywords
-        seo_keywords = [keyword.strip() for keyword in lines.split(",")]
+        seo_keywords = [
+            keyword.strip() for line in lines for keyword in line.split(",")
+        ]
 
         # Find video description input Element
         description_input = self.safe_find_element(
@@ -236,8 +238,16 @@ class YouTubeUploader:
         description = description.replace("TITLE", video_title)
 
         if description:
-            description_input.clear()
-            description_input.send_keys(description)
+            self.driver.execute_script(
+                """
+                arguments[0].innerText = arguments[1];
+                arguments[0].dispatchEvent(new Event('input', { bubbles: true }));
+            """,
+                description_input,
+                description,
+            )
+            # description_input.clear()
+            # description_input.send_keys(description)
             print("Video description is updated with SEO Keywords")
         else:
             print("Failed to set video description")
@@ -275,9 +285,12 @@ class YouTubeUploader:
             print(f"Video {current_video}/{total_videos}: {video_filename}")
 
             self.navigate_to_upload_page()
+            time.sleep(3)
             self.select_video_file(video_path)
             self.wait_for_input_fields()
+            time.sleep(3)
             self.set_video_title(video_title)
+            time.sleep(3)
             self.set_video_description(keywords_path, video_title)
             self.focus_upload_dialog()
             self.upload_thumbnail(thumbnail_path)
