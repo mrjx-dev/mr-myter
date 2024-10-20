@@ -78,6 +78,26 @@ class YouTubeUploader:
                 return thumbnail_path
         return None
 
+    @staticmethod
+    def find_keywords(video_path: str) -> str | None:
+        """
+        Find matching thumbnail for a video file.
+
+        Args:
+            video_path: Path to video file.
+
+        Returns:
+            str or None: Path to thumbnail if found, None otherwise.
+        """
+        video_dir = os.path.dirname(video_path)
+        video_name = os.path.splitext(os.path.basename(video_path))[0]
+
+        for ext in [".txt", ".md", ".json"]:
+            keywords_path = os.path.join(video_dir, video_name + ext)
+            if os.path.exists(keywords_path):
+                return keywords_path
+        return None
+
     def navigate_to_upload_page(self) -> None:
         """
         Navigate to YouTube Studio upload page.
@@ -85,6 +105,7 @@ class YouTubeUploader:
         Raises:
             TimeoutException: If page elements are not clickable.
         """
+        print("\nNavigating to upload page...")
         self.driver.get(STUDIO_URL)
         create_button = WebDriverWait(self.driver, 20).until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, "#create-icon"))
@@ -112,6 +133,7 @@ class YouTubeUploader:
         Raises:
             TimeoutException: If file input is not present.
         """
+        print("Selecting video file...")
         file_input = WebDriverWait(self.driver, 20).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, 'input[type="file"]'))
         )
@@ -138,6 +160,7 @@ class YouTubeUploader:
         Args:
             video_title: Title for the video.
         """
+        print("Renaming video title...")
         title_input = self.safe_find_element(
             By.CSS_SELECTOR,
             "ytcp-social-suggestions-textbox[id='title-textarea'] div[id='textbox']",
@@ -149,15 +172,15 @@ class YouTubeUploader:
         else:
             print("Failed to rename video title")
 
-    def scroll_upload_dialog(self) -> None:
+    def focus_upload_dialog(self) -> None:
         """
-        Scroll upload dialog to reveal more options.
+        Simulates a scroll on the upload dialog to focus and reveal more options.
         """
         upload_dialog = self.safe_find_element(By.CSS_SELECTOR, "ytcp-uploads-dialog")
         if upload_dialog:
             self.driver.execute_script("arguments[0].scrollTop += 500;", upload_dialog)
         else:
-            print("Upload dialog not found for scrolling")
+            print("Error: Upload dialog not found!")
 
     def upload_thumbnail(self, thumbnail_path) -> None:
         """
@@ -172,39 +195,69 @@ class YouTubeUploader:
                 'input[type="file"][accept="image/jpeg,image/png"]',
             )
             if thumbnail_input:
+                print("Uploading thumbnail...")
                 thumbnail_input.send_keys(thumbnail_path)
-                print("Thumbnail uploaded...")
+                print("Thumbnail uploaded!")
                 time.sleep(1)
                 print("Processing video...")
-                time.sleep(5)
             else:
-                print("Thumbnail input not found")
+                print("Error: Thumbnail input not found!")
         else:
-            print("No matching thumbnail found")
+            print("Error: No matching thumbnail found!")
 
-    def set_video_description(self, video_description):
-        # TODO: Find Element for video description.
+    #! TODO: TEST THIS FUNCTION!
+    def set_video_description(self, keywords_path, video_title) -> None:
+        """
+        Set description of uploaded video.
+
+        Args:
+            keywords_path (_type_): Path to the file that contains keywords
+            video_title (_type_): Title for the video
+        """
+        # Read keywords from file
+        with open(keywords_path, "r") as f:
+            lines = f.readlines()
+
+        # Create the list of keywords
+        seo_keywords = [
+            keyword.strip() for line in lines for keyword in line.split(",")
+        ]
+
+        # Find video description input Element
+        print("Updating video description...")
         description_input = self.safe_find_element(
             By.CSS_SELECTOR,
             "ytcp-social-suggestions-textbox[id='description-textarea'] div[id='textbox']",
         )
-        description: str = ""
-        if description_input:
-            description_input.get_property("getElementText")
-            description.append(description_input)
-        else:
-            print("No Video Description")
 
-        # TODO: Create a way to input SEO rich Keywords to replace every "KEYWORD" placeholder in description.
-        seo_keyword = ...
-        for keyword in description:
-            keyword.replace("KEYWORD", seo_keyword)
+        if description_input:
+            # Get the Current description text from the input field
+            description = description_input.get_attribute("innerText")
+
+        # Replace the "KEYWORD" placeholder with the the SEO Keywords
+        for keyword in seo_keywords:
+            description = description.replace("KEYWORD", keyword)
+
+        # Replace the "TITLE" placeholder with the video title
+        description = description.replace("TITLE", video_title)
+
+        if description:
+            self.driver.execute_script(
+                """
+                arguments[0].innerText = arguments[1];
+                arguments[0].dispatchEvent(new Event('input', { bubbles: true }));
+            """,
+                description_input,
+                description,
+            )
+            # description_input.clear()
+            # description_input.send_keys(description)
+            print("Video description is updated with SEO Keywords!")
+        else:
+            print("Error: Failed to set video description")
 
     # TODO: Finish writing these functions.
     def set_video_tags(self, tags):
-        # tags_input = self.safe_find_element(
-        #     By.CSS_SELECTOR,
-        # )
         pass
 
     def set_monetization():
@@ -230,21 +283,25 @@ class YouTubeUploader:
         video_filename = os.path.basename(video_path)
         video_title = os.path.splitext(video_filename)[0]
         thumbnail_path = self.find_thumbnail(video_path)
+        keywords_path = self.find_keywords(video_path)
 
         try:
-            print(f"Video {current_video}/{total_videos}: {video_filename}")
+            print(f"\nVideo {current_video}/{total_videos}: {video_filename}")
 
             self.navigate_to_upload_page()
+            time.sleep(3)
             self.select_video_file(video_path)
             self.wait_for_input_fields()
+            time.sleep(5)
             self.set_video_title(video_title)
-            self.scroll_upload_dialog()
+            time.sleep(3)
+            self.set_video_description(keywords_path, video_title)
+            self.focus_upload_dialog()
             self.upload_thumbnail(thumbnail_path)
+            time.sleep(5)
 
             print(f"Video {current_video}/{total_videos} uploaded!")
             print("Preparing next video...")
-            time.sleep(1)
-            print("...")
             time.sleep(1)
             print("..")
             time.sleep(1)

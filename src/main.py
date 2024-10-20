@@ -8,7 +8,7 @@ import os
 import time
 import traceback
 
-from utility import ChromeDriver, YouTubeUploader
+from utility import ChromeDriver, YouTubeUploader, mrjxtr
 
 
 def main() -> None:
@@ -25,25 +25,7 @@ def main() -> None:
         Exception: If driver initialization fails.
     """
     try:
-        print(
-            r" __    __     ______     __    __     __  __     ______   ______     ______    "
-        )
-        print(
-            r'/\ "-./  \   /\  == \   /\ "-./  \   /\ \_\ \   /\__  _\ /\  ___\   /\  == \   '
-        )
-        print(
-            r"\ \ \-./\ \  \ \  __<   \ \ \-./\ \  \ \____ \  \/_/\ \/ \ \  __\   \ \  __<   "
-        )
-        print(
-            r" \ \_\ \ \_\  \ \_\ \_\  \ \_\ \ \_\  \/\_____\    \ \_\  \ \_____\  \ \_\ \_\ "
-        )
-        print(
-            r"  \/_/  \/_/   \/_/ /_/   \/_/  \/_/   \/_____/     \/_/   \/_____/   \/_/ /_/ "
-        )
-        print()
-        print("Automated Mass YouTube Uploader")
-        print("by: @mrjxtr")
-        print()
+        mrjxtr.print_intro()
         chrome_driver = ChromeDriver()
         chrome_driver.start_chrome_debugger()
         driver = chrome_driver.setup_driver()
