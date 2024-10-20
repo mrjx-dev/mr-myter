@@ -105,6 +105,7 @@ class YouTubeUploader:
         Raises:
             TimeoutException: If page elements are not clickable.
         """
+        print("\nNavigating to upload page...")
         self.driver.get(STUDIO_URL)
         create_button = WebDriverWait(self.driver, 20).until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, "#create-icon"))
@@ -132,6 +133,7 @@ class YouTubeUploader:
         Raises:
             TimeoutException: If file input is not present.
         """
+        print("Selecting video file...")
         file_input = WebDriverWait(self.driver, 20).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, 'input[type="file"]'))
         )
@@ -158,6 +160,7 @@ class YouTubeUploader:
         Args:
             video_title: Title for the video.
         """
+        print("Renaming video title...")
         title_input = self.safe_find_element(
             By.CSS_SELECTOR,
             "ytcp-social-suggestions-textbox[id='title-textarea'] div[id='textbox']",
@@ -177,7 +180,7 @@ class YouTubeUploader:
         if upload_dialog:
             self.driver.execute_script("arguments[0].scrollTop += 500;", upload_dialog)
         else:
-            print("Upload dialog not found for scrolling")
+            print("Error: Upload dialog not found!")
 
     def upload_thumbnail(self, thumbnail_path) -> None:
         """
@@ -192,15 +195,15 @@ class YouTubeUploader:
                 'input[type="file"][accept="image/jpeg,image/png"]',
             )
             if thumbnail_input:
+                print("Uploading thumbnail...")
                 thumbnail_input.send_keys(thumbnail_path)
-                print("Thumbnail uploaded...")
+                print("Thumbnail uploaded!")
                 time.sleep(1)
                 print("Processing video...")
-                time.sleep(5)
             else:
-                print("Thumbnail input not found")
+                print("Error: Thumbnail input not found!")
         else:
-            print("No matching thumbnail found")
+            print("Error: No matching thumbnail found!")
 
     #! TODO: TEST THIS FUNCTION!
     def set_video_description(self, keywords_path, video_title) -> None:
@@ -221,6 +224,7 @@ class YouTubeUploader:
         ]
 
         # Find video description input Element
+        print("Updating video description...")
         description_input = self.safe_find_element(
             By.CSS_SELECTOR,
             "ytcp-social-suggestions-textbox[id='description-textarea'] div[id='textbox']",
@@ -248,9 +252,9 @@ class YouTubeUploader:
             )
             # description_input.clear()
             # description_input.send_keys(description)
-            print("Video description is updated with SEO Keywords")
+            print("Video description is updated with SEO Keywords!")
         else:
-            print("Failed to set video description")
+            print("Error: Failed to set video description")
 
     # TODO: Finish writing these functions.
     def set_video_tags(self, tags):
@@ -282,23 +286,22 @@ class YouTubeUploader:
         keywords_path = self.find_keywords(video_path)
 
         try:
-            print(f"Video {current_video}/{total_videos}: {video_filename}")
+            print(f"\nVideo {current_video}/{total_videos}: {video_filename}")
 
             self.navigate_to_upload_page()
             time.sleep(3)
             self.select_video_file(video_path)
             self.wait_for_input_fields()
-            time.sleep(3)
+            time.sleep(5)
             self.set_video_title(video_title)
             time.sleep(3)
             self.set_video_description(keywords_path, video_title)
             self.focus_upload_dialog()
             self.upload_thumbnail(thumbnail_path)
+            time.sleep(5)
 
             print(f"Video {current_video}/{total_videos} uploaded!")
             print("Preparing next video...")
-            time.sleep(1)
-            print("...")
             time.sleep(1)
             print("..")
             time.sleep(1)
