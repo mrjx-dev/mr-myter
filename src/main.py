@@ -41,7 +41,7 @@ def main() -> None:
                 f"Checking for videos in: ...{os.path.sep}{os.path.basename(videos_folder)}"
             )
 
-            video_files = [
+            video_files: list[str] = [
                 f
                 for f in os.listdir(videos_folder)
                 if f.endswith((".mp4", ".avi", ".mov"))

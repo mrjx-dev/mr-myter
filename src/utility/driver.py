@@ -4,6 +4,7 @@ Chrome WebDriver management for YouTube video uploading.
 Handles Chrome initialization and WebDriver setup.
 """
 
+import platform
 import subprocess
 
 from selenium import webdriver
@@ -26,11 +27,39 @@ class ChromeDriver:
         Raises:
             Exception: If Chrome fails to start with debugging flag.
         """
-        # Start Chrome with remote debugging
-        command: str = r'"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222'
+        # Default Chrome paths for different operating systems
+        chrome_paths = {
+            "win32": r'"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"',
+            "win64": r'"C:\Program Files\Google\Chrome\Application\chrome.exe"',
+            "linux": "google-chrome",
+            "darwin": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        }
+
+        # Get the appropriate Chrome path based on OS
+        os_type = platform.system().lower()
+        if os_type == "windows":
+            chrome_path = (
+                chrome_paths["win64"]
+                if platform.machine().endswith("64")
+                else chrome_paths["win32"]
+            )
+        elif os_type == "linux":
+            chrome_path = chrome_paths["linux"]
+        elif os_type == "darwin":
+            chrome_path = chrome_paths["darwin"]
+        else:
+            raise Exception(f"Unsupported operating system: {os_type}")
+
+        # Construct the command with debugging flag
+        command = f"{chrome_path} --remote-debugging-port=9222"
 
         try:
-            subprocess.Popen(command, shell=True)
+            # Redirect stderr to suppress D-Bus errors
+            subprocess.Popen(
+                command, 
+                shell=True, 
+                stderr=subprocess.DEVNULL
+            )
             print("Starting Chrome with remote debugging...")
         except Exception as e:
             print(f"Error starting Chrome: {str(e)}")
@@ -45,6 +74,7 @@ class ChromeDriver:
         Raises:
             Exception: If WebDriver initialization or navigation fails.
         """
+        print("Setting up WebDriver...")
         chrome_options = Options()
         chrome_options.add_experimental_option("debuggerAddress", "127.0.0.1:9222")
 

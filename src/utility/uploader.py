@@ -13,6 +13,7 @@ from selenium.common.exceptions import (
     TimeoutException,
 )
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
@@ -98,6 +99,26 @@ class YouTubeUploader:
                 return keywords_path
         return None
 
+    @staticmethod
+    def find_tags(video_path: str) -> str | None:
+        """
+        Find matching tags for a video file.
+
+        Args:
+            video_path: Path to video file.
+
+        Returns:
+            str or None: Path to tags file if found, None otherwise.
+        """
+        video_dir = os.path.dirname(video_path)
+        video_name = os.path.splitext(os.path.basename(video_path))[0]
+
+        for ext in [".txt", ".md", ".json"]:
+            tags_path = os.path.join(video_dir, video_name + ext)
+            if os.path.exists(tags_path):
+                return tags_path
+        return None
+
     def navigate_to_upload_page(self) -> None:
         """
         Navigate to YouTube Studio upload page.
@@ -121,7 +142,7 @@ class YouTubeUploader:
             )
         )
         self.safe_click(upload_option)
-        print("Navigated to upload page")
+        time.sleep(3)
 
     def select_video_file(self, video_path) -> None:
         """
@@ -133,12 +154,12 @@ class YouTubeUploader:
         Raises:
             TimeoutException: If file input is not present.
         """
-        print("Selecting video file...")
+        print("Selecting video to upload...")
         file_input = WebDriverWait(self.driver, 20).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, 'input[type="file"]'))
         )
         file_input.send_keys(video_path)
-        print("Video file selected")
+        print("Video selected!")
 
     def wait_for_input_fields(self) -> None:
         """
@@ -150,6 +171,7 @@ class YouTubeUploader:
         next_button = self.safe_find_element(
             By.CSS_SELECTOR, "#next-button", timeout=300
         )
+        time.sleep(3)
         if not next_button:
             raise Exception("Input fields not found")
 
@@ -161,6 +183,7 @@ class YouTubeUploader:
             video_title: Title for the video.
         """
         print("Renaming video title...")
+        time.sleep(3)
         title_input = self.safe_find_element(
             By.CSS_SELECTOR,
             "ytcp-social-suggestions-textbox[id='title-textarea'] div[id='textbox']",
@@ -168,7 +191,8 @@ class YouTubeUploader:
         if title_input:
             title_input.clear()
             title_input.send_keys(video_title)
-            print(f"Video renamed: {video_title}")
+            print("Video renamed!")
+            time.sleep(3)
         else:
             print("Failed to rename video title")
 
@@ -189,23 +213,22 @@ class YouTubeUploader:
         Args:
             thumbnail_path: Path to thumbnail file or None.
         """
+        print("Uploading thumbnail...")
         if thumbnail_path:
             thumbnail_input = self.safe_find_element(
                 By.CSS_SELECTOR,
                 'input[type="file"][accept="image/jpeg,image/png"]',
             )
             if thumbnail_input:
-                print("Uploading thumbnail...")
                 thumbnail_input.send_keys(thumbnail_path)
+                time.sleep(3)
                 print("Thumbnail uploaded!")
-                time.sleep(1)
-                print("Processing video...")
+                time.sleep(3)
             else:
                 print("Error: Thumbnail input not found!")
         else:
             print("Error: No matching thumbnail found!")
 
-    #! TODO: TEST THIS FUNCTION!
     def set_video_description(self, keywords_path, video_title) -> None:
         """
         Set description of uploaded video.
@@ -214,17 +237,12 @@ class YouTubeUploader:
             keywords_path (_type_): Path to the file that contains keywords
             video_title (_type_): Title for the video
         """
-        # Read keywords from file
+        print("Updating video description...")
+        # Read first line of keywords from file and create list of keywords
         with open(keywords_path, "r") as f:
-            lines = f.readlines()
-
-        # Create the list of keywords
-        seo_keywords = [
-            keyword.strip() for line in lines for keyword in line.split(",")
-        ]
+            seo_keywords = [keyword.strip() for keyword in f.readline().split(",")]
 
         # Find video description input Element
-        print("Updating video description...")
         description_input = self.safe_find_element(
             By.CSS_SELECTOR,
             "ytcp-social-suggestions-textbox[id='description-textarea'] div[id='textbox']",
@@ -250,15 +268,106 @@ class YouTubeUploader:
                 description_input,
                 description,
             )
-            # description_input.clear()
-            # description_input.send_keys(description)
-            print("Video description is updated with SEO Keywords!")
+            print("Video description is updated")
+            time.sleep(5)
         else:
             print("Error: Failed to set video description")
 
+    def expand_more_options(self) -> None:
+        """Click 'Show more' button to reveal additional options if not already expanded."""
+        # Try to find the button
+        show_more_button = self.safe_find_element(
+            By.CSS_SELECTOR, "ytcp-button[id='toggle-button']"
+        )
+
+        if show_more_button:
+            button_text = show_more_button.get_attribute("aria-label") or ""
+            text_content = show_more_button.find_element(
+                By.CSS_SELECTOR, ".ytcp-button-shape-impl__button-text-content"
+            ).text
+
+            if "Show more" in button_text or "Show more" in text_content:
+                try:
+                    self.driver.execute_script(
+                        "arguments[0].click();", show_more_button
+                    )
+                    time.sleep(5)
+                except Exception as e:
+                    print(f"Error clicking show more button: {str(e)}")
+            else:
+                print("Options are already expanded")
+        else:
+            print("Error: Show more button not found!")
+
     # TODO: Finish writing these functions.
-    def set_video_tags(self, tags):
-        pass
+    def set_video_tags(self, tags_path) -> None:
+        """Set video tags from file, up to YouTube's limit."""
+        print("Updating video tags...")
+        try:
+            # Expand options first to reveal tags input
+            self.expand_more_options()
+            time.sleep(3)
+
+            # Read tags from second line of file
+            with open(tags_path, "r") as f:
+                next(f)
+                tags = f.readline()
+
+            # Find the default tag and remove it then add it to the beginning of our tags
+            default_tag_text = self.safe_find_element(
+                By.CSS_SELECTOR, "ytcp-chip[id='chip-0'] #chip-text"
+            )
+            if default_tag_text:
+                default_tag = default_tag_text.text
+                delete_icon = self.safe_find_element(
+                    By.CSS_SELECTOR, "ytcp-chip[id='chip-0'] #delete-icon"
+                )
+                if delete_icon:
+                    self.safe_click(delete_icon)
+                    time.sleep(1)
+                    tags = f"{default_tag}, {tags}"
+
+            # Ensure tags do not exceed 500 characters
+            if len(tags) > 460:
+                tags = tags[:460]
+
+            # Find tags input using the exact selector
+            tags_input = self.safe_find_element(
+                By.CSS_SELECTOR,
+                "input.text-input.style-scope.ytcp-chip-bar[aria-label='Tags']",
+            )
+            time.sleep(1)
+
+            if not tags_input:
+                print("Error: Tags input not found")
+                return
+
+            # Set value and trigger events using JavaScript
+            self.driver.execute_script(
+                """
+                var input = arguments[0];
+                input.value = arguments[1];
+                input.dispatchEvent(new Event('input'));
+                input.dispatchEvent(new Event('change'));
+                setTimeout(() => {
+                    input.dispatchEvent(new KeyboardEvent('keydown', {'key': 'Enter'}));
+                    input.dispatchEvent(new KeyboardEvent('keyup', {'key': 'Enter'}));
+                }, 3000);
+                """,
+                tags_input,
+                tags,
+            )
+            time.sleep(2)
+            tags_input.send_keys(Keys.ENTER)
+            time.sleep(1)
+            tags_input.send_keys(Keys.ENTER)
+            tags_input.send_keys(Keys.TAB)
+
+            print("Tags are updated!")
+            time.sleep(3)
+
+        except Exception as e:
+            print(f"Error setting tags: {str(e)}")
 
     def set_monetization():
         pass
@@ -284,23 +393,25 @@ class YouTubeUploader:
         video_title = os.path.splitext(video_filename)[0]
         thumbnail_path = self.find_thumbnail(video_path)
         keywords_path = self.find_keywords(video_path)
-
+        tags_path = self.find_tags(video_path)
         try:
             print(f"\nVideo {current_video}/{total_videos}: {video_filename}")
 
             self.navigate_to_upload_page()
-            time.sleep(3)
             self.select_video_file(video_path)
-            self.wait_for_input_fields()
-            time.sleep(5)
-            self.set_video_title(video_title)
-            time.sleep(3)
-            self.set_video_description(keywords_path, video_title)
-            self.focus_upload_dialog()
-            self.upload_thumbnail(thumbnail_path)
-            time.sleep(5)
 
-            print(f"Video {current_video}/{total_videos} uploaded!")
+            self.wait_for_input_fields()
+
+            self.set_video_title(video_title)
+            self.set_video_description(keywords_path, video_title)
+
+            self.focus_upload_dialog()
+
+            self.upload_thumbnail(thumbnail_path)
+            self.set_video_tags(tags_path)
+
+            print(f"\nVideo {current_video}/{total_videos} uploaded!")
+            time.sleep(3)
             print("Preparing next video...")
             time.sleep(1)
             print("..")
