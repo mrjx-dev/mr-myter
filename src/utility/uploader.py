@@ -155,9 +155,12 @@ class YouTubeUploader:
             TimeoutException: If file input is not present.
         """
         print("Selecting video to upload...")
-        file_input = WebDriverWait(self.driver, 20).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, 'input[type="file"]'))
+        file_input = self.safe_find_element(
+            By.CSS_SELECTOR, 'input[type="file"], timeout=20'
         )
+        # file_input = WebDriverWait(self.driver, 20).until(
+        #     EC.presence_of_element_located((By.CSS_SELECTOR, 'input[type="file"]'))
+        # )
         file_input.send_keys(video_path)
         print("Video selected!")
 
