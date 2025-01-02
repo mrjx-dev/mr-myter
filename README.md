@@ -1,5 +1,7 @@
 # 🤖 Mr-Myter (Automated Mass YouTube Uploader)
 
+> ⚠ NOT ACTIVELY MAINTAINED
+
 ![Welcome-Mr-Myter](/docs/welcome-mr-myter.png)
 
 ## 📜 History
